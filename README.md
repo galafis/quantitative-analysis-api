@@ -1,447 +1,207 @@
-# 📊 Quantitative Analysis Api
+# Quantitative Analysis API
 
-> Professional Python project implementing Quantitative Analysis Api
+API REST para analise quantitativa de series temporais financeiras, construida com FastAPI.
 
-[![Python](https://img.shields.io/badge/Python-3.12-3776AB.svg)](https://img.shields.io/badge/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://img.shields.io/badge/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688.svg)](https://img.shields.io/badge/)
-[![NumPy](https://img.shields.io/badge/NumPy-1.26-013243.svg)](https://img.shields.io/badge/)
-[![Pandas](https://img.shields.io/badge/Pandas-2.2-150458.svg)](https://img.shields.io/badge/)
-[![Redis](https://img.shields.io/badge/Redis-7-DC382D.svg)](https://img.shields.io/badge/)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB.svg)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688.svg)](https://fastapi.tiangolo.com)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[English](#english) | [Português](#português)
+[Portugues](#portugues) | [English](#english)
+
+---
+
+## Portugues
+
+### Sobre
+
+Microservico FastAPI que recebe dados OHLCV (abertura, maxima, minima, fechamento, volume) via POST e calcula indicadores tecnicos e estatisticas financeiras. Nao possui banco de dados — todo o processamento e feito em memoria sobre os dados enviados na requisicao.
+
+### Funcionalidades
+
+- **Indicadores tecnicos**: SMA, EMA, RSI, MACD e Bandas de Bollinger
+- **Estatisticas**: retorno medio anualizado, volatilidade, indice de Sharpe, drawdown maximo, retorno total
+- **Validacao**: modelos Pydantic com restricoes (precos > 0, volume >= 0)
+- **Documentacao automatica**: Swagger UI em `/docs` e ReDoc em `/redoc`
+
+### Endpoints
+
+| Metodo | Endpoint | Descricao |
+|--------|----------|-----------|
+| `GET` | `/` | Informacoes da API e lista de endpoints |
+| `POST` | `/indicators/sma` | Media Movel Simples (periodo configuravel) |
+| `POST` | `/indicators/ema` | Media Movel Exponencial |
+| `POST` | `/indicators/rsi` | Indice de Forca Relativa |
+| `POST` | `/indicators/macd` | MACD (linha, sinal, histograma) |
+| `POST` | `/indicators/bollinger` | Bandas de Bollinger |
+| `POST` | `/statistics/summary` | Estatisticas completas da serie |
+| `GET` | `/health` | Verificacao de saude do servico |
+
+### Arquitetura
+
+```
+quantitative-analysis-api/
+├── app/
+│   └── main.py            # Aplicacao completa (modelos, indicadores, endpoints)
+├── tests/
+│   └── test_api.py        # Testes funcionais dos endpoints
+├── Dockerfile             # Imagem Docker (python:3.11-slim + uvicorn)
+├── requirements.txt
+├── LICENSE
+└── README.md
+```
+
+Toda a logica esta em `app/main.py` (~260 linhas): modelos Pydantic, classes `TechnicalIndicators` e `StatisticalAnalysis` com metodos estaticos, e os endpoints FastAPI que recebem dados, convertem para DataFrame pandas e retornam os resultados.
+
+### Como Usar
+
+```bash
+# Clonar e instalar
+git clone https://github.com/galafis/quantitative-analysis-api.git
+cd quantitative-analysis-api
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# Executar
+python app/main.py
+# API disponivel em http://localhost:8000
+
+# Testar
+pytest tests/ -v
+```
+
+### Exemplo de Requisicao
+
+```bash
+curl -X POST http://localhost:8000/indicators/sma?period=20 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "symbol": "PETR4",
+    "data": [
+      {"timestamp": "2024-01-01T00:00:00", "open": 36.5, "high": 37.0, "low": 36.0, "close": 36.8, "volume": 1000000},
+      {"timestamp": "2024-01-02T00:00:00", "open": 36.8, "high": 37.5, "low": 36.5, "close": 37.2, "volume": 1200000}
+    ]
+  }'
+```
+
+### Docker
+
+```bash
+docker build -t quantitative-analysis-api .
+docker run -p 8000:8000 quantitative-analysis-api
+```
+
+### Tecnologias
+
+| Tecnologia | Uso |
+|------------|-----|
+| **FastAPI** | Framework web assincrono |
+| **Pydantic** | Validacao de dados de entrada/saida |
+| **pandas** | Calculo de indicadores (rolling, ewm) |
+| **NumPy** | Operacoes numericas (raiz quadrada para anualizacao) |
+| **uvicorn** | Servidor ASGI |
 
 ---
 
 ## English
 
-### 🎯 Overview
+### About
 
-**Quantitative Analysis Api** is a production-grade Python application that showcases modern software engineering practices including clean architecture, comprehensive testing, containerized deployment, and CI/CD readiness.
+FastAPI microservice that receives OHLCV data (open, high, low, close, volume) via POST and calculates technical indicators and financial statistics. No database — all processing is done in memory on the data sent in the request.
 
-The codebase comprises **361 lines** of source code organized across **6 modules**, following industry best practices for maintainability, scalability, and code quality.
+### Features
 
-### ✨ Key Features
+- **Technical indicators**: SMA, EMA, RSI, MACD, and Bollinger Bands
+- **Statistics**: annualized mean return, volatility, Sharpe ratio, max drawdown, total return
+- **Validation**: Pydantic models with constraints (prices > 0, volume >= 0)
+- **Auto-documentation**: Swagger UI at `/docs` and ReDoc at `/redoc`
 
-- **⚡ Async API**: High-performance async REST API with FastAPI
-- **📖 Auto-Documentation**: Interactive Swagger UI and ReDoc
-- **✅ Validation**: Pydantic-powered request/response validation
-- **🐳 Containerized**: Docker support for consistent deployment
-- **📡 REST API**: 6 endpoints with full CRUD operations
-- **🏗️ Object-Oriented**: 6 core classes with clean architecture
-
-### 🏗️ Architecture
-
-```mermaid
-graph TB
-    subgraph Client["🖥️ Client Layer"]
-        A[Web Client]
-        B[API Documentation]
-    end
-    
-    subgraph API["⚡ API Layer"]
-        C[Middleware Pipeline]
-        D[Route Handlers]
-        E[Business Logic]
-    end
-    
-    subgraph Data["💾 Data Layer"]
-        F[(Primary Database)]
-        G[Cache]
-    end
-    
-    A --> C
-    B --> C
-    C --> D --> E
-    E --> F
-    E --> G
-    
-    style Client fill:#e1f5fe
-    style API fill:#f3e5f5
-    style Data fill:#fff3e0
-```
-
-```mermaid
-classDiagram
-    class IndicatorResponse
-    class TechnicalIndicators
-    class StatisticalAnalysis
-    class StatisticsResponse
-    class PriceData
-    class TimeSeriesRequest
-```
-
-### 📡 API Endpoints
+### Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/` | Retrieve resource (list/create) |
-| `POST` | `/indicators/sma` | Create Indicators → Sma |
-| `POST` | `/indicators/ema` | Create Indicators → Ema |
-| `POST` | `/indicators/rsi` | Create Indicators → Rsi |
-| `POST` | `/indicators/macd` | Create Indicators → Macd |
-| `POST` | `/indicators/bollinger` | Create Indicators → Bollinger |
+| `GET` | `/` | API info and endpoint listing |
+| `POST` | `/indicators/sma` | Simple Moving Average (configurable period) |
+| `POST` | `/indicators/ema` | Exponential Moving Average |
+| `POST` | `/indicators/rsi` | Relative Strength Index |
+| `POST` | `/indicators/macd` | MACD (line, signal, histogram) |
+| `POST` | `/indicators/bollinger` | Bollinger Bands |
+| `POST` | `/statistics/summary` | Full series statistics |
+| `GET` | `/health` | Service health check |
 
-### 🚀 Quick Start
-
-#### Prerequisites
-
-- Python 3.12+
-- pip (Python package manager)
-- Docker and Docker Compose (optional)
-
-#### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/galafis/quantitative-analysis-api.git
-cd quantitative-analysis-api
-
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-#### Running
-
-```bash
-# Run the application
-python app/main.py
-```
-
-### 🐳 Docker
-
-```bash
-# Build the Docker image
-docker build -t quantitative-analysis-api .
-
-# Run the container
-docker run -d -p 8000:8000 --name quantitative-analysis-api quantitative-analysis-api
-
-# View logs
-docker logs -f quantitative-analysis-api
-
-# Stop and remove
-docker stop quantitative-analysis-api && docker rm quantitative-analysis-api
-```
-
-### 🧪 Testing
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage report
-pytest --cov --cov-report=html
-
-# Run specific test module
-pytest tests/test_main.py -v
-
-# Run with detailed output
-pytest -v --tb=short
-```
-
-### 📁 Project Structure
+### Architecture
 
 ```
 quantitative-analysis-api/
-├── app/          # Source code
-│   ├── api/           # API endpoints
-│   │   └── __init__.py
-│   ├── core/          # Core configuration
-│   │   └── __init__.py
-│   ├── models/        # Data models
-│   │   └── __init__.py
-│   ├── services/      # Business logic
-│   │   └── __init__.py
-│   └── main.py
-├── tests/         # Test suite
-│   └── test_api.py
-├── Dockerfile
+├── app/
+│   └── main.py            # Full application (models, indicators, endpoints)
+├── tests/
+│   └── test_api.py        # Functional endpoint tests
+├── Dockerfile             # Docker image (python:3.11-slim + uvicorn)
+├── requirements.txt
 ├── LICENSE
-├── README.md
-└── requirements.txt
+└── README.md
 ```
 
-### 🔒 Security Considerations
+All logic lives in `app/main.py` (~260 lines): Pydantic models, `TechnicalIndicators` and `StatisticalAnalysis` classes with static methods, and FastAPI endpoints that receive data, convert to pandas DataFrame, and return results.
 
-| Feature | Implementation |
-|---------|---------------|
-| **Authentication** | JWT tokens with configurable expiration |
-| **Authorization** | Role-based access control (RBAC) |
-| **Input Validation** | Schema-based validation on all endpoints |
-| **Rate Limiting** | Configurable request throttling |
-| **Data Encryption** | AES-256 for sensitive data at rest |
-| **SQL Injection** | ORM-based queries prevent injection |
-| **CORS** | Configurable CORS policies |
-| **Audit Logging** | Complete request/response audit trail |
-
-> ⚠️ **Production Deployment**: Always configure proper SSL/TLS, rotate secrets regularly, and follow the principle of least privilege.
-
-### 🛠️ Tech Stack
-
-| Technology | Description | Role |
-|------------|-------------|------|
-| **Python** | Core Language | Primary |
-| **Docker** | Containerization platform | Framework |
-| **FastAPI** | High-performance async web framework | Framework |
-| **NumPy** | Numerical computing | Framework |
-| **Pandas** | Data manipulation library | Framework |
-| **Redis** | In-memory data store | Framework |
-
-### 🚀 Deployment
-
-#### Cloud Deployment Options
-
-The application is containerized and ready for deployment on:
-
-| Platform | Service | Notes |
-|----------|---------|-------|
-| **AWS** | ECS, EKS, EC2 | Full container support |
-| **Google Cloud** | Cloud Run, GKE | Serverless option available |
-| **Azure** | Container Instances, AKS | Enterprise integration |
-| **DigitalOcean** | App Platform, Droplets | Cost-effective option |
+### Usage
 
 ```bash
-# Production build
-docker build -t quantitative-analysis-api:latest .
+# Clone and install
+git clone https://github.com/galafis/quantitative-analysis-api.git
+cd quantitative-analysis-api
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 
-# Tag for registry
-docker tag quantitative-analysis-api:latest registry.example.com/quantitative-analysis-api:latest
+# Run
+python app/main.py
+# API available at http://localhost:8000
 
-# Push to registry
-docker push registry.example.com/quantitative-analysis-api:latest
+# Test
+pytest tests/ -v
 ```
 
-### 🤝 Contributing
+### Request Example
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+```bash
+curl -X POST http://localhost:8000/indicators/sma?period=20 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "symbol": "AAPL",
+    "data": [
+      {"timestamp": "2024-01-01T00:00:00", "open": 185.0, "high": 186.0, "low": 184.0, "close": 185.5, "volume": 1000000},
+      {"timestamp": "2024-01-02T00:00:00", "open": 185.5, "high": 187.0, "low": 185.0, "close": 186.2, "volume": 1200000}
+    ]
+  }'
+```
 
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+### Docker
 
-### 📄 License
+```bash
+docker build -t quantitative-analysis-api .
+docker run -p 8000:8000 quantitative-analysis-api
+```
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### Technologies
 
-### 👤 Author
-
-**Gabriel Demetrios Lafis**
-- GitHub: [@galafis](https://github.com/galafis)
-- LinkedIn: [Gabriel Demetrios Lafis](https://linkedin.com/in/gabriel-demetrios-lafis)
+| Technology | Usage |
+|------------|-------|
+| **FastAPI** | Async web framework |
+| **Pydantic** | Input/output data validation |
+| **pandas** | Indicator calculations (rolling, ewm) |
+| **NumPy** | Numerical operations (sqrt for annualization) |
+| **uvicorn** | ASGI server |
 
 ---
 
-## Português
-
-### 🎯 Visão Geral
-
-**Quantitative Analysis Api** é uma aplicação Python de nível profissional que demonstra práticas modernas de engenharia de software, incluindo arquitetura limpa, testes abrangentes, implantação containerizada e prontidão para CI/CD.
-
-A base de código compreende **361 linhas** de código-fonte organizadas em **6 módulos**, seguindo as melhores práticas do setor para manutenibilidade, escalabilidade e qualidade de código.
-
-### ✨ Funcionalidades Principais
-
-- **⚡ Async API**: High-performance async REST API with FastAPI
-- **📖 Auto-Documentation**: Interactive Swagger UI and ReDoc
-- **✅ Validation**: Pydantic-powered request/response validation
-- **🐳 Containerized**: Docker support for consistent deployment
-- **📡 REST API**: 6 endpoints with full CRUD operations
-- **🏗️ Object-Oriented**: 6 core classes with clean architecture
-
-### 🏗️ Arquitetura
-
-```mermaid
-graph TB
-    subgraph Client["🖥️ Client Layer"]
-        A[Web Client]
-        B[API Documentation]
-    end
-    
-    subgraph API["⚡ API Layer"]
-        C[Middleware Pipeline]
-        D[Route Handlers]
-        E[Business Logic]
-    end
-    
-    subgraph Data["💾 Data Layer"]
-        F[(Primary Database)]
-        G[Cache]
-    end
-    
-    A --> C
-    B --> C
-    C --> D --> E
-    E --> F
-    E --> G
-    
-    style Client fill:#e1f5fe
-    style API fill:#f3e5f5
-    style Data fill:#fff3e0
-```
-
-### 📡 API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/` | Retrieve resource (list/create) |
-| `POST` | `/indicators/sma` | Create Indicators → Sma |
-| `POST` | `/indicators/ema` | Create Indicators → Ema |
-| `POST` | `/indicators/rsi` | Create Indicators → Rsi |
-| `POST` | `/indicators/macd` | Create Indicators → Macd |
-| `POST` | `/indicators/bollinger` | Create Indicators → Bollinger |
-
-### 🚀 Início Rápido
-
-#### Prerequisites
-
-- Python 3.12+
-- pip (Python package manager)
-- Docker and Docker Compose (optional)
-
-#### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/galafis/quantitative-analysis-api.git
-cd quantitative-analysis-api
-
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-#### Running
-
-```bash
-# Run the application
-python app/main.py
-```
-
-### 🐳 Docker
-
-```bash
-# Build the Docker image
-docker build -t quantitative-analysis-api .
-
-# Run the container
-docker run -d -p 8000:8000 --name quantitative-analysis-api quantitative-analysis-api
-
-# View logs
-docker logs -f quantitative-analysis-api
-
-# Stop and remove
-docker stop quantitative-analysis-api && docker rm quantitative-analysis-api
-```
-
-### 🧪 Testing
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage report
-pytest --cov --cov-report=html
-
-# Run specific test module
-pytest tests/test_main.py -v
-
-# Run with detailed output
-pytest -v --tb=short
-```
-
-### 📁 Estrutura do Projeto
-
-```
-quantitative-analysis-api/
-├── app/          # Source code
-│   ├── api/           # API endpoints
-│   │   └── __init__.py
-│   ├── core/          # Core configuration
-│   │   └── __init__.py
-│   ├── models/        # Data models
-│   │   └── __init__.py
-│   ├── services/      # Business logic
-│   │   └── __init__.py
-│   └── main.py
-├── tests/         # Test suite
-│   └── test_api.py
-├── Dockerfile
-├── LICENSE
-├── README.md
-└── requirements.txt
-```
-
-### 🔒 Security Considerations
-
-| Feature | Implementation |
-|---------|---------------|
-| **Authentication** | JWT tokens with configurable expiration |
-| **Authorization** | Role-based access control (RBAC) |
-| **Input Validation** | Schema-based validation on all endpoints |
-| **Rate Limiting** | Configurable request throttling |
-| **Data Encryption** | AES-256 for sensitive data at rest |
-| **SQL Injection** | ORM-based queries prevent injection |
-| **CORS** | Configurable CORS policies |
-| **Audit Logging** | Complete request/response audit trail |
-
-> ⚠️ **Production Deployment**: Always configure proper SSL/TLS, rotate secrets regularly, and follow the principle of least privilege.
-
-### 🛠️ Stack Tecnológica
-
-| Tecnologia | Descrição | Papel |
-|------------|-----------|-------|
-| **Python** | Core Language | Primary |
-| **Docker** | Containerization platform | Framework |
-| **FastAPI** | High-performance async web framework | Framework |
-| **NumPy** | Numerical computing | Framework |
-| **Pandas** | Data manipulation library | Framework |
-| **Redis** | In-memory data store | Framework |
-
-### 🚀 Deployment
-
-#### Cloud Deployment Options
-
-The application is containerized and ready for deployment on:
-
-| Platform | Service | Notes |
-|----------|---------|-------|
-| **AWS** | ECS, EKS, EC2 | Full container support |
-| **Google Cloud** | Cloud Run, GKE | Serverless option available |
-| **Azure** | Container Instances, AKS | Enterprise integration |
-| **DigitalOcean** | App Platform, Droplets | Cost-effective option |
-
-```bash
-# Production build
-docker build -t quantitative-analysis-api:latest .
-
-# Tag for registry
-docker tag quantitative-analysis-api:latest registry.example.com/quantitative-analysis-api:latest
-
-# Push to registry
-docker push registry.example.com/quantitative-analysis-api:latest
-```
-
-### 🤝 Contribuindo
-
-Contribuições são bem-vindas! Sinta-se à vontade para enviar um Pull Request.
-
-### 📄 Licença
-
-Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
-### 👤 Autor
+## Autor / Author
 
 **Gabriel Demetrios Lafis**
 - GitHub: [@galafis](https://github.com/galafis)
 - LinkedIn: [Gabriel Demetrios Lafis](https://linkedin.com/in/gabriel-demetrios-lafis)
+
+## Licenca / License
+
+MIT - veja [LICENSE](LICENSE) / see [LICENSE](LICENSE)

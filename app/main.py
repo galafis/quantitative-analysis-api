@@ -3,15 +3,13 @@ Quantitative Analysis API
 A FastAPI-based microservice for financial time series analysis
 """
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
-import redis
-import json
+from datetime import datetime
 
 app = FastAPI(
     title="Quantitative Analysis API",
@@ -27,15 +25,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Redis client (optional, for caching)
-try:
-    redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
-    redis_client.ping()
-    REDIS_AVAILABLE = True
-except:
-    REDIS_AVAILABLE = False
-    redis_client = None
 
 # Models
 class PriceData(BaseModel):
@@ -161,7 +150,7 @@ async def root():
 @app.post("/indicators/sma", response_model=IndicatorResponse)
 async def calculate_sma(request: TimeSeriesRequest, period: int = 20):
     """Calculate Simple Moving Average"""
-    df = pd.DataFrame([d.dict() for d in request.data])
+    df = pd.DataFrame([d.model_dump() for d in request.data])
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     df = df.sort_values('timestamp')
     
@@ -177,7 +166,7 @@ async def calculate_sma(request: TimeSeriesRequest, period: int = 20):
 @app.post("/indicators/ema", response_model=IndicatorResponse)
 async def calculate_ema(request: TimeSeriesRequest, period: int = 20):
     """Calculate Exponential Moving Average"""
-    df = pd.DataFrame([d.dict() for d in request.data])
+    df = pd.DataFrame([d.model_dump() for d in request.data])
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     df = df.sort_values('timestamp')
     
@@ -193,7 +182,7 @@ async def calculate_ema(request: TimeSeriesRequest, period: int = 20):
 @app.post("/indicators/rsi", response_model=IndicatorResponse)
 async def calculate_rsi(request: TimeSeriesRequest, period: int = 14):
     """Calculate Relative Strength Index"""
-    df = pd.DataFrame([d.dict() for d in request.data])
+    df = pd.DataFrame([d.model_dump() for d in request.data])
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     df = df.sort_values('timestamp')
     
@@ -209,7 +198,7 @@ async def calculate_rsi(request: TimeSeriesRequest, period: int = 14):
 @app.post("/indicators/macd")
 async def calculate_macd(request: TimeSeriesRequest, fast: int = 12, slow: int = 26, signal: int = 9):
     """Calculate MACD"""
-    df = pd.DataFrame([d.dict() for d in request.data])
+    df = pd.DataFrame([d.model_dump() for d in request.data])
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     df = df.sort_values('timestamp')
     
@@ -227,7 +216,7 @@ async def calculate_macd(request: TimeSeriesRequest, fast: int = 12, slow: int =
 @app.post("/indicators/bollinger")
 async def calculate_bollinger(request: TimeSeriesRequest, period: int = 20, std_dev: float = 2.0):
     """Calculate Bollinger Bands"""
-    df = pd.DataFrame([d.dict() for d in request.data])
+    df = pd.DataFrame([d.model_dump() for d in request.data])
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     df = df.sort_values('timestamp')
     
@@ -245,7 +234,7 @@ async def calculate_bollinger(request: TimeSeriesRequest, period: int = 20, std_
 @app.post("/statistics/summary", response_model=StatisticsResponse)
 async def calculate_statistics(request: TimeSeriesRequest):
     """Calculate comprehensive statistics"""
-    df = pd.DataFrame([d.dict() for d in request.data])
+    df = pd.DataFrame([d.model_dump() for d in request.data])
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     df = df.sort_values('timestamp')
     
@@ -264,7 +253,6 @@ async def calculate_statistics(request: TimeSeriesRequest):
 async def health_check():
     return {
         "status": "healthy",
-        "redis": "connected" if REDIS_AVAILABLE else "disconnected",
         "timestamp": datetime.now().isoformat()
     }
 
