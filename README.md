@@ -38,6 +38,18 @@ Microservico FastAPI que recebe dados OHLCV (abertura, maxima, minima, fechament
 
 ### Arquitetura
 
+```mermaid
+graph TD
+    A["Requisicao POST<br/>JSON com dados OHLCV"] --> B["app/main.py<br/>Endpoints FastAPI"]
+    B --> C["Modelos Pydantic<br/>Validacao de Entrada"]
+    C --> D["TechnicalIndicators<br/>SMA, EMA, RSI, MACD, Bollinger"]
+    C --> E["StatisticalAnalysis<br/>Retorno, Volatilidade, Sharpe, Drawdown"]
+    D --> F["Resposta JSON"]
+    E --> F
+```
+
+### Estrutura do Projeto
+
 ```
 quantitative-analysis-api/
 ├── app/
@@ -130,6 +142,18 @@ FastAPI microservice that receives OHLCV data (open, high, low, close, volume) v
 | `GET` | `/health` | Service health check |
 
 ### Architecture
+
+```mermaid
+graph TD
+    A["POST Request<br/>JSON with OHLCV data"] --> B["app/main.py<br/>FastAPI Endpoints"]
+    B --> C["Pydantic Models<br/>Input Validation"]
+    C --> D["TechnicalIndicators<br/>SMA, EMA, RSI, MACD, Bollinger"]
+    C --> E["StatisticalAnalysis<br/>Return, Volatility, Sharpe, Drawdown"]
+    D --> F["JSON Response"]
+    E --> F
+```
+
+### Project Structure
 
 ```
 quantitative-analysis-api/
