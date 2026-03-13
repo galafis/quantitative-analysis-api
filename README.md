@@ -5,6 +5,7 @@ API REST para analise quantitativa de series temporais financeiras, construida c
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688.svg)](https://fastapi.tiangolo.com)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker)](Dockerfile)
 
 [Portugues](#portugues) | [English](#english)
 
